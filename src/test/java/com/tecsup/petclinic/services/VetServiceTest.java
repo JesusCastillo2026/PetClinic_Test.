@@ -14,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -23,7 +24,7 @@ import static org.mockito.Mockito.*;
 /**
  * Pruebas unitarias de VetService con JUnit 5 y Mockito.
  *
- * @author Daniel Millones
+ * @author Daniel Millones / Antonio
  */
 @ExtendWith(MockitoExtension.class)
 class VetServiceTest {
@@ -37,17 +38,13 @@ class VetServiceTest {
     @InjectMocks
     private VetServiceImpl vetService;
 
-    // ===== CRUD básico =====
+    // ==========================================
+    // PARTE DANIEL MILLONES: CRUD Básico
+    // ==========================================
 
-    /**
-     * Verifica que se cree un veterinario activo.
-     *
-     * @author Daniel Millones
-     */
     @Test
     @DisplayName("Crear veterinario")
     void testCreateVet() {
-        // Arrange
         VetDTO nuevo = VetDTO.builder()
                 .firstName("James")
                 .lastName("Carter")
@@ -57,10 +54,8 @@ class VetServiceTest {
         Vet guardado = new Vet(1, "James", "Carter", "james.carter@petclinic.com", "6085551234", true);
         when(vetRepository.save(any(Vet.class))).thenReturn(guardado);
 
-        // Act
         VetDTO result = vetService.create(nuevo);
 
-        // Assert
         assertNotNull(result.getId());
         assertEquals("James", result.getFirstName());
         assertEquals("Carter", result.getLastName());
@@ -70,15 +65,9 @@ class VetServiceTest {
         verify(vetRepository, times(1)).save(any(Vet.class));
     }
 
-    /**
-     * Verifica que se actualicen los datos de un veterinario existente.
-     *
-     * @author Daniel Millones
-     */
     @Test
     @DisplayName("Actualizar datos de veterinario")
     void testUpdateVet() throws VetNotFoundException {
-        // Arrange
         Vet existente = new Vet(1, "James", "Carter", "james.carter@petclinic.com", "6085551234", true);
         VetDTO cambios = VetDTO.builder()
                 .id(1)
@@ -90,10 +79,8 @@ class VetServiceTest {
         when(vetRepository.findById(1)).thenReturn(Optional.of(existente));
         when(vetRepository.save(any(Vet.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        // Act
         VetDTO result = vetService.update(cambios);
 
-        // Assert
         assertEquals(1, result.getId());
         assertEquals("Helen", result.getFirstName());
         assertEquals("Leary", result.getLastName());
@@ -103,26 +90,61 @@ class VetServiceTest {
         verify(vetRepository, times(1)).save(existente);
     }
 
-    /**
-     * Verifica que se encuentre un veterinario existente por su id.
-     *
-     * @author Daniel Millones
-     */
     @Test
     @DisplayName("Buscar veterinario existente por id")
     void testFindVetById() throws VetNotFoundException {
-        // Arrange
         Vet vet = new Vet(1, "James", "Carter", "james.carter@petclinic.com", "6085551234", true);
         when(vetRepository.findById(1)).thenReturn(Optional.of(vet));
 
-        // Act
         VetDTO result = vetService.findById(1);
 
-        // Assert
         assertNotNull(result);
         assertEquals(1, result.getId());
         assertEquals("James", result.getFirstName());
         assertEquals("james.carter@petclinic.com", result.getEmail());
         verify(vetRepository, times(1)).findById(1);
+    }
+
+    // ==========================================
+    // PARTE ANTONIO (Integrante C): Casos de Error y Filtros
+    // ==========================================
+
+    @Test
+    @DisplayName("1. Buscar un veterinario inexistente debe lanzar VetNotFoundException")
+    void testFindVetById_NotFound() {
+        Integer idInexistente = 999999;
+        when(vetRepository.findById(idInexistente)).thenReturn(Optional.empty());
+
+        assertThrows(VetNotFoundException.class, () -> {
+            vetService.findById(idInexistente);
+        });
+        verify(vetRepository, times(1)).findById(idInexistente);
+    }
+
+    @Test
+    @DisplayName("2. Desactivar un veterinario inexistente debe lanzar VetNotFoundException")
+    void testDeactivateVet_NotFound() {
+        Integer idInexistente = 999999;
+        when(vetRepository.findById(idInexistente)).thenReturn(Optional.empty());
+
+        assertThrows(VetNotFoundException.class, () -> {
+            vetService.deactivate(idInexistente);
+        });
+        verify(vetRepository, times(1)).findById(idInexistente);
+    }
+
+    @Test
+    @DisplayName("3. Buscar veterinarios inactivos debe devolver únicamente registros desactivados")
+    void testFindInactiveVets() {
+        Vet inactivo = new Vet(1, "James", "Carter", "james.carter@petclinic.com", "6085551234", false);
+        when(vetRepository.findByActiveFalse()).thenReturn(List.of(inactivo));
+
+        List<VetDTO> result = vetService.findInactiveVets();
+
+        assertNotNull(result);
+        assertFalse(result.isEmpty());
+        assertEquals(1, result.size());
+        assertFalse(result.get(0).getActive());
+        verify(vetRepository, times(1)).findByActiveFalse();
     }
 }
