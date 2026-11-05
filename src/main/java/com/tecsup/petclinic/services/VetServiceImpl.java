@@ -48,7 +48,9 @@ public class VetServiceImpl implements VetService {
     @Override
     @Transactional(readOnly = true)
     public VetDTO findById(Integer id) throws VetNotFoundException {
-        return vetMapper.mapToDto(getVet(id));
+        Vet vet = getVet(id);
+        log.info("Vet encontrado: {}", vet);
+        return vetMapper.mapToDto(vet);
     }
 
     @Override
