@@ -7,12 +7,16 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 @Entity
 @Table(name = "vets")
-@Data
+@Getter
+@Setter
+@ToString
 @NoArgsConstructor
 @AllArgsConstructor
 public class Vet {
@@ -21,18 +25,18 @@ public class Vet {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "first_name", length = 30)
+    @Column(name = "first_name", nullable = false, length = 30)
     private String firstName;
 
-    @Column(name = "last_name", length = 30)
+    @Column(name = "last_name", nullable = false, length = 30)
     private String lastName;
 
-    @Column(length = 100)
+    @Column(name = "email")
     private String email;
 
-    @Column(length = 20)
+    @Column(name = "phone")
     private String phone;
 
-    @Column(nullable = false)
-    private boolean active = true;
+    @Column(name = "active", nullable = false)
+    private Boolean active = true;
 }

@@ -1,8 +1,10 @@
 package com.tecsup.petclinic.exceptions;
 
-public class VetNotFoundException extends RuntimeException {
+public class VetNotFoundException extends Exception {
 
-    public VetNotFoundException(Integer id) {
-        super("No se encontró el veterinario con ID " + id);
+    private static final long serialVersionUID = 1L;
+
+    public VetNotFoundException(String message) {
+        super(message);
     }
 }
