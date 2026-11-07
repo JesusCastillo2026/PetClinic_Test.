@@ -14,6 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
 
@@ -54,17 +55,21 @@ public class VetControllerMockitoTest {
     public void testFindAllVets() throws Exception {
 
         List<VetDTO> vetsTO = TObjectCreator.getAllVetsDTO();
+        log.info("Vets esperados (mock): {}", vetsTO.size());
 
         Mockito.when(vetService.findAll())
                 .thenReturn(vetsTO);
 
-        this.mockMvc.perform(get("/vets"))
+        MvcResult result = this.mockMvc.perform(get("/vets"))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(vetsTO.size())))
                 .andExpect(jsonPath("$[0].id", is(vetsTO.get(0).getId())))
-                .andExpect(jsonPath("$[0].lastName", is(vetsTO.get(0).getLastName())));
+                .andExpect(jsonPath("$[0].lastName", is(vetsTO.get(0).getLastName())))
+                .andReturn();
+
+        log.info("Vets listados (mock): {}", result.getResponse().getContentAsString());
 
         Mockito.verify(vetService).findAll();
     }
@@ -79,17 +84,21 @@ public class VetControllerMockitoTest {
     public void testFindVetOK() throws Exception {
 
         VetDTO vetTO = TObjectCreator.getVetDTO();
+        log.info("Vet esperado (mock): {}", vetTO);
 
         Mockito.when(vetService.findById(vetTO.getId()))
                 .thenReturn(vetTO);
 
-        this.mockMvc.perform(get("/vets/" + vetTO.getId()))
+        MvcResult result = this.mockMvc.perform(get("/vets/" + vetTO.getId()))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(vetTO.getId())))
                 .andExpect(jsonPath("$.firstName", is(vetTO.getFirstName())))
-                .andExpect(jsonPath("$.lastName", is(vetTO.getLastName())));
+                .andExpect(jsonPath("$.lastName", is(vetTO.getLastName())))
+                .andReturn();
+
+        log.info("Vet encontrado (mock): {}", result.getResponse().getContentAsString());
 
         Mockito.verify(vetService).findById(vetTO.getId());
     }
@@ -104,12 +113,16 @@ public class VetControllerMockitoTest {
     public void testFindVetKO() throws Exception {
 
         Integer ID_NOT_EXIST = 666;
+        log.info("Mock lanza VetNotFoundException para id {}", ID_NOT_EXIST);
 
         Mockito.when(vetService.findById(ID_NOT_EXIST))
                 .thenThrow(new VetNotFoundException("Record not found...!"));
 
-        this.mockMvc.perform(get("/vets/" + ID_NOT_EXIST))
+        MvcResult result = this.mockMvc.perform(get("/vets/" + ID_NOT_EXIST))
                 .andDo(print())
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andReturn();
+
+        log.info("Vet {} no encontrado (mock), status: {}", ID_NOT_EXIST, result.getResponse().getStatus());
     }
 }

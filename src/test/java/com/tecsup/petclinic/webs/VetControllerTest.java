@@ -8,6 +8,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasSize;
@@ -43,13 +44,16 @@ public class VetControllerTest {
     @DisplayName("Listar todos los veterinarios")
     public void testFindAllVets() throws Exception {
 
-        this.mockMvc.perform(get("/vets"))
+        MvcResult result = this.mockMvc.perform(get("/vets"))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(6))))
                 .andExpect(jsonPath("$[0].id", is(1)))
-                .andExpect(jsonPath("$[0].lastName", is("Carter")));
+                .andExpect(jsonPath("$[0].lastName", is("Carter")))
+                .andReturn();
+
+        log.info("Vets listados (H2): {}", result.getResponse().getContentAsString());
     }
 
     /**
@@ -61,13 +65,16 @@ public class VetControllerTest {
     @DisplayName("Buscar veterinario existente")
     public void testFindVetOK() throws Exception {
 
-        this.mockMvc.perform(get("/vets/1"))
+        MvcResult result = this.mockMvc.perform(get("/vets/1"))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(1)))
                 .andExpect(jsonPath("$.firstName", is("James")))
-                .andExpect(jsonPath("$.lastName", is("Carter")));
+                .andExpect(jsonPath("$.lastName", is("Carter")))
+                .andReturn();
+
+        log.info("Vet encontrado (H2): {}", result.getResponse().getContentAsString());
     }
 
     /**
@@ -79,8 +86,11 @@ public class VetControllerTest {
     @DisplayName("Buscar veterinario inexistente")
     public void testFindVetKO() throws Exception {
 
-        this.mockMvc.perform(get("/vets/666"))
+        MvcResult result = this.mockMvc.perform(get("/vets/666"))
                 .andDo(print())
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andReturn();
+
+        log.info("Vet 666 no encontrado (H2), status: {}", result.getResponse().getStatus());
     }
 }
