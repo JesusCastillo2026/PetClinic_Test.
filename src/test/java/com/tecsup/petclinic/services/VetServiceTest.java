@@ -24,7 +24,7 @@ import static org.mockito.Mockito.*;
 /**
  * Pruebas unitarias de VetService con JUnit 5 y Mockito.
  *
- * @author Daniel Millones / Antonio
+ * @author Daniel Millones / Antonio / Castillo
  */
 @ExtendWith(MockitoExtension.class)
 class VetServiceTest {
@@ -146,5 +146,59 @@ class VetServiceTest {
         assertEquals(1, result.size());
         assertFalse(result.get(0).getActive());
         verify(vetRepository, times(1)).findByActiveFalse();
+    }
+
+    // ==========================================
+    // PARTE CASTILLO: Activación lógica y filtros
+    // ==========================================
+
+    @Test
+    @DisplayName("Desactivar veterinario sin eliminarlo")
+    void testDeactivateVet() throws VetNotFoundException {
+        Vet vet = new Vet(1, "Ana", "Rojas", "ana@example.com", "999111222", true);
+        when(vetRepository.findById(1)).thenReturn(Optional.of(vet));
+        when(vetRepository.save(vet)).thenReturn(vet);
+
+        VetDTO result = vetService.deactivate(1);
+
+        assertFalse(result.getActive());
+        verify(vetRepository).findById(1);
+        verify(vetRepository).save(vet);
+        verify(vetRepository, never()).delete(vet);
+        verifyNoMoreInteractions(vetRepository);
+    }
+
+    @Test
+    @DisplayName("Reactivar veterinario")
+    void testReactivateVet() throws VetNotFoundException {
+        Vet vet = new Vet(2, "Luis", "Paz", "luis@example.com", "999333444", false);
+        when(vetRepository.findById(2)).thenReturn(Optional.of(vet));
+        when(vetRepository.save(vet)).thenReturn(vet);
+
+        VetDTO result = vetService.reactivate(2);
+
+        assertTrue(result.getActive());
+        verify(vetRepository).findById(2);
+        verify(vetRepository).save(vet);
+        verify(vetRepository, never()).delete(vet);
+        verifyNoMoreInteractions(vetRepository);
+    }
+
+    @Test
+    @DisplayName("Listar veterinarios activos como DTO")
+    void testFindActiveVets() {
+        List<Vet> activeVets = List.of(
+                new Vet(1, "Ana", "Rojas", "ana@example.com", "999111222", true),
+                new Vet(3, "Eva", "Mora", "eva@example.com", "999555666", true)
+        );
+        when(vetRepository.findByActiveTrue()).thenReturn(activeVets);
+
+        List<VetDTO> result = vetService.findActiveVets();
+
+        assertEquals(2, result.size());
+        assertTrue(result.stream().allMatch(VetDTO::getActive));
+        assertEquals("Ana", result.get(0).getFirstName());
+        verify(vetRepository).findByActiveTrue();
+        verifyNoMoreInteractions(vetRepository);
     }
 }
