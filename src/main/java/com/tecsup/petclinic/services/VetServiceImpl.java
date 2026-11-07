@@ -54,6 +54,14 @@ public class VetServiceImpl implements VetService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<VetDTO> findAll() {
+        List<Vet> vets = vetRepository.findAll();
+        vets.forEach(vet -> log.info("{}", vet));
+        return vetMapper.mapToDtoList(vets);
+    }
+
+    @Override
     public VetDTO deactivate(Integer id) throws VetNotFoundException {
         Vet vet = getVet(id);
         vet.setActive(false);
@@ -83,6 +91,13 @@ public class VetServiceImpl implements VetService {
         List<Vet> vets = vetRepository.findByActiveFalse();
         vets.forEach(vet -> log.info("{}", vet));
         return vetMapper.mapToDtoList(vets);
+    }
+
+    @Override
+    public void delete(Integer id) throws VetNotFoundException {
+        Vet vet = getVet(id);
+        vetRepository.delete(vet);
+        log.info("Vet eliminado: {}", id);
     }
 
     /**
