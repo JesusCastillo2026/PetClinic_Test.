@@ -20,6 +20,28 @@ public class VetController {
 
     private final VetService vetService;
 
+    /**
+     * GET /vets              -> todos
+     * GET /vets?active=true  -> solo activos
+     * GET /vets?active=false -> solo inactivos
+     */
+    @GetMapping
+    public ResponseEntity<List<VetDTO>> findAll(@RequestParam(required = false) Boolean active) {
+        if (active == null) {
+            return ResponseEntity.ok(vetService.findAll());
+        }
+        return ResponseEntity.ok(active ? vetService.findActiveVets() : vetService.findInactiveVets());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<VetDTO> findById(@PathVariable Integer id) {
+        try {
+            return ResponseEntity.ok(vetService.findById(id));
+        } catch (VetNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @PostMapping
     public ResponseEntity<VetDTO> create(@RequestBody VetDTO vetDTO) {
         return ResponseEntity.status(HttpStatus.CREATED).body(vetService.create(vetDTO));
@@ -35,16 +57,7 @@ public class VetController {
         }
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<VetDTO> findById(@PathVariable Integer id) {
-        try {
-            return ResponseEntity.ok(vetService.findById(id));
-        } catch (VetNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    @PatchMapping("/{id}/deactivate")
+    @PutMapping("/{id}/deactivate")
     public ResponseEntity<VetDTO> deactivate(@PathVariable Integer id) {
         try {
             return ResponseEntity.ok(vetService.deactivate(id));
@@ -53,7 +66,7 @@ public class VetController {
         }
     }
 
-    @PatchMapping("/{id}/reactivate")
+    @PutMapping("/{id}/reactivate")
     public ResponseEntity<VetDTO> reactivate(@PathVariable Integer id) {
         try {
             return ResponseEntity.ok(vetService.reactivate(id));
@@ -62,13 +75,13 @@ public class VetController {
         }
     }
 
-    @GetMapping("/active")
-    public ResponseEntity<List<VetDTO>> findActive() {
-        return ResponseEntity.ok(vetService.findActiveVets());
-    }
-
-    @GetMapping("/inactive")
-    public ResponseEntity<List<VetDTO>> findInactive() {
-        return ResponseEntity.ok(vetService.findInactiveVets());
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> delete(@PathVariable Integer id) {
+        try {
+            vetService.delete(id);
+            return ResponseEntity.ok("Delete ID: " + id);
+        } catch (VetNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }
