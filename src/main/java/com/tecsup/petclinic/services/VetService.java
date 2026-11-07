@@ -37,6 +37,13 @@ public interface VetService {
     VetDTO findById(Integer id) throws VetNotFoundException;
 
     /**
+     * Lista todos los veterinarios.
+     *
+     * @return lista completa de veterinarios
+     */
+    List<VetDTO> findAll();
+
+    /**
      * Desactiva un veterinario (borrado logico, no elimina el registro).
      *
      * @param id identificador del veterinario
@@ -67,4 +74,12 @@ public interface VetService {
      * @return lista de veterinarios con active = false
      */
     List<VetDTO> findInactiveVets();
+
+    /**
+     * Elimina un veterinario por su id.
+     *
+     * @param id identificador del veterinario
+     * @throws VetNotFoundException si no existe el veterinario
+     */
+    void delete(Integer id) throws VetNotFoundException;
 }
